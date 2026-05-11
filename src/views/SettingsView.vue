@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useSettingsStore } from "../stores/settingsStore";
-import { useMCPStore } from "../stores/mcpStore";
 import {
   getSettings,
   updateSettings,
   testDeepSeek,
-  connectMCP,
-  disconnectMCP,
-  listMCPTools,
 } from "../api";
 
 const settingsStore = useSettingsStore();
-const mcpStore = useMCPStore();
 const activeTab = ref("model");
 
 const apiKey = ref("");
@@ -20,10 +15,6 @@ const baseUrl = ref("");
 const model = ref("");
 const testResult = ref("");
 const workDir = ref("");
-
-const connecting = ref<string | null>(null);
-const toolsMap = ref<Record<string, string[]>>({});
-const loadingTools = ref<string | null>(null);
 
 onMounted(async () => {
   try {
@@ -62,38 +53,6 @@ async function testConn() {
     testResult.value = "❌ 连接失败: " + (e?.message || "");
   }
 }
-
-async function doConnect(id: string) {
-  connecting.value = id;
-  try {
-    await connectMCP(id);
-    const conn = mcpStore.connections.find(c => c.id === id);
-    if (conn) conn.status = "connected";
-  } finally {
-    connecting.value = null;
-  }
-}
-
-async function doDisconnect(id: string) {
-  try {
-    await disconnectMCP(id);
-    const conn = mcpStore.connections.find(c => c.id === id);
-    if (conn) conn.status = "disconnected";
-    toolsMap.value[id] = [];
-  } catch {}
-}
-
-async function viewTools(id: string) {
-  loadingTools.value = id;
-  try {
-    const res = await listMCPTools(id);
-    toolsMap.value[id] = res.data.map((t: any) => t.name);
-  } catch {
-    toolsMap.value[id] = [];
-  } finally {
-    loadingTools.value = null;
-  }
-}
 </script>
 
 <template>
@@ -106,12 +65,6 @@ async function viewTools(id: string) {
         @click="activeTab = 'model'"
       >
         🤖 模型设置
-      </button>
-      <button
-        :class="['tab', { active: activeTab === 'mcp' }]"
-        @click="activeTab = 'mcp'"
-      >
-        🔌 MCP 配置
       </button>
       <button
         :class="['tab', { active: activeTab === 'other' }]"
@@ -140,54 +93,6 @@ async function viewTools(id: string) {
           <button @click="saveSettings">保存设置</button>
         </div>
         <div v-if="testResult" class="test-result">{{ testResult }}</div>
-      </div>
-    </div>
-
-    <div v-show="activeTab === 'mcp'" class="tab-content">
-      <div class="section">
-        <p class="mcp-hint">预设 MCP 服务</p>
-        <div class="conn-list">
-          <div
-            v-for="conn in mcpStore.connections"
-            :key="conn.id"
-            class="conn-item"
-          >
-            <div class="conn-info">
-              <strong>{{ conn.name }}</strong>
-              <span :class="['status-badge', conn.status]">{{
-                conn.status === "connected" ? "● 已连接" : "○ 未连接"
-              }}</span>
-            </div>
-            <div class="conn-detail">
-              <small>{{ conn.command }} {{ conn.args }}</small>
-            </div>
-            <div class="conn-actions">
-              <button
-                v-if="conn.status === 'disconnected'"
-                :disabled="connecting === conn.id"
-                @click="doConnect(conn.id)"
-              >
-                {{ connecting === conn.id ? "连接中..." : "连接" }}
-              </button>
-              <button
-                v-if="conn.status === 'connected'"
-                @click="doDisconnect(conn.id)"
-              >
-                断开
-              </button>
-              <button
-                v-if="conn.status === 'connected'"
-                :disabled="loadingTools === conn.id"
-                @click="viewTools(conn.id)"
-              >
-                {{ loadingTools === conn.id ? "加载中..." : "查看 Tools" }}
-              </button>
-            </div>
-            <div v-if="toolsMap[conn.id]?.length" class="tools-list">
-              <span v-for="t in toolsMap[conn.id]" :key="t" class="tool-tag">{{ t }}</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 

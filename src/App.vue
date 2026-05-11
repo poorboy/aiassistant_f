@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useThemeStore } from './stores/themeStore'
+import { useThemeStore } from "./stores/themeStore";
 
-const theme = useThemeStore()
+const theme = useThemeStore();
 </script>
 
 <template>
@@ -15,6 +15,14 @@ const theme = useThemeStore()
           <span class="nav-icon">💬</span>
           <span class="nav-label">聊天</span>
         </router-link>
+        <router-link to="/mcp" class="nav-item" active-class="active">
+          <span class="nav-icon">🔌</span>
+          <span class="nav-label">AI 桥接服务</span>
+        </router-link>
+        <router-link to="/prompts" class="nav-item" active-class="active">
+          <span class="nav-icon">📝</span>
+          <span class="nav-label">角色管理</span>
+        </router-link>
         <router-link to="/settings" class="nav-item" active-class="active">
           <span class="nav-icon">⚙️</span>
           <span class="nav-label">系统设置</span>
@@ -26,7 +34,7 @@ const theme = useThemeStore()
       </nav>
       <div class="sidebar-footer">
         <button class="theme-toggle" @click="theme.toggle()">
-          {{ theme.isDark ? '☀️ 白天' : '🌙 夜间' }}
+          {{ theme.isDark ? "☀️ 白天" : "🌙 夜间" }}
         </button>
       </div>
     </aside>
@@ -69,14 +77,27 @@ const theme = useThemeStore()
   box-sizing: border-box;
 }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
-  transition: background 0.3s, color 0.3s;
+  transition:
+    background 0.3s,
+    color 0.3s;
 }
-a { text-decoration: none; color: inherit; }
-button { cursor: pointer; font-family: inherit; }
-input, select, textarea { font-family: inherit; }
+a {
+  text-decoration: none;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+input,
+select,
+textarea {
+  font-family: inherit;
+}
 </style>
 
 <style scoped>
@@ -91,7 +112,9 @@ input, select, textarea { font-family: inherit; }
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  transition: background 0.3s, border-color 0.3s;
+  transition:
+    background 0.3s,
+    border-color 0.3s;
 }
 .sidebar-header {
   padding: 20px 16px;
@@ -115,7 +138,9 @@ input, select, textarea { font-family: inherit; }
   border-radius: 8px;
   font-size: 14px;
   color: var(--text-secondary);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .nav-item:hover {
   background: var(--hover-bg);
@@ -145,7 +170,9 @@ input, select, textarea { font-family: inherit; }
   background: var(--input-bg);
   color: var(--text);
   font-size: 13px;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 .theme-toggle:hover {
   background: var(--hover-bg);
