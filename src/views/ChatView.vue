@@ -319,8 +319,8 @@ async function refreshTools() {
             <option v-for="p in g.items" :key="p.id" :value="p.id">{{ p.title }}</option>
           </optgroup>
         </select>
+        <span class="token-label">Tokens: {{ totalTokens.toLocaleString() }}</span>
       </div>
-      <div class="token-bar">Tokens: {{ totalTokens.toLocaleString() }}</div>
       <div class="input-area">
         <input
           v-model="input"
@@ -524,18 +524,26 @@ async function refreshTools() {
   font-size: 14px;
 }
 .prompt-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 4px 16px;
   border-top: 1px solid var(--border, #eee);
   background: var(--card-bg, #fff);
 }
 .prompt-select {
-  width: 100%;
+  flex: 1;
   padding: 6px 10px;
   border: 1px solid var(--border, #ddd);
   border-radius: 6px;
   font-size: 12px;
   background: var(--input-bg, #fff);
   color: var(--text, #333);
+}
+.token-label {
+  font-size: 11px;
+  color: var(--text-secondary, #999);
+  white-space: nowrap;
 }
 .input-area {
   display: flex;
@@ -565,13 +573,5 @@ async function refreshTools() {
 }
 .input-area button:disabled {
   opacity: 0.5;
-}
-.token-bar {
-  padding: 2px 16px;
-  font-size: 11px;
-  color: var(--text-secondary, #999);
-  text-align: right;
-  border-top: 1px solid var(--border, #eee);
-  background: var(--card-bg, #fff);
 }
 </style>
