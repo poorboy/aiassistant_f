@@ -23,12 +23,12 @@ export function listConversations() {
   return api.get('/chat/conversations')
 }
 
-export function createConversation() {
-  return api.post('/chat/conversations')
+export function createConversation(promptId?: string) {
+  return api.post('/chat/conversations', { prompt_id: promptId || '' })
 }
 
-export function updateConversation(id: string, title: string) {
-  return api.put(`/chat/conversations/${id}`, { title })
+export function updateConversation(id: string, title: string, promptId?: string) {
+  return api.put(`/chat/conversations/${id}`, { title, prompt_id: promptId || '' })
 }
 
 export function deleteConversation(id: string) {
