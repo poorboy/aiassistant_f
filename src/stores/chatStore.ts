@@ -12,6 +12,8 @@ export interface Conversation {
   id: string
   title: string
   message_count: number
+  token_count: number
+  prompt_id: string
   created_at: string
   updated_at: string
 }
