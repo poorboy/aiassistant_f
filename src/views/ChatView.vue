@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted } from "vue";
+import { ref, computed, onMounted, watch, onUnmounted, nextTick } from "vue";
 import { useChatStore } from "../stores/chatStore";
 import { useMCPStore } from "../stores/mcpStore";
 import {
@@ -18,8 +18,10 @@ const mcpStore = useMCPStore();
 const input = ref("");
 const sseRef = ref<EventSource | null>(null);
 const editingConvId = ref("");
+const editingTitle = ref("");
+const messagesRef = ref<HTMLElement | null>(null);
 const prompts = ref<any[]>([]);
-const selectedPromptId = ref("");
+const selectedPromptId = ref(localStorage.getItem("lastPromptId") || "");
 
 const safeConvs = computed(() =>
   Array.isArray(chatStore.conversations) ? chatStore.conversations : [],
@@ -27,6 +29,10 @@ const safeConvs = computed(() =>
 const safeMsgs = computed(() =>
   Array.isArray(chatStore.messages) ? chatStore.messages : [],
 );
+const totalTokens = computed(() => {
+  const conv = chatStore.conversations.find(c => c.id === chatStore.currentConvId);
+  return conv?.token_count ?? 0;
+});
 
 onMounted(async () => {
   await loadConversations();
@@ -79,11 +85,13 @@ async function switchConversation(id: string) {
 
 async function newConversation() {
   try {
-    const res = await createConversation();
+    const res = await createConversation(selectedPromptId.value);
     const conv = {
       id: res.data.id,
       title: res.data.title,
       message_count: 0,
+      token_count: res.data.token_count || 0,
+      prompt_id: res.data.prompt_id || '',
       created_at: "",
       updated_at: "",
     };
@@ -94,12 +102,13 @@ async function newConversation() {
 }
 
 async function renameConversation(id: string) {
-  const title = editingConvId.value;
+  const title = editingTitle.value;
   if (!title.trim()) return;
   try {
     await updateConversation(id, title.trim());
     chatStore.updateConversation(id, title.trim());
     editingConvId.value = "";
+    editingTitle.value = "";
   } catch {}
 }
 
@@ -158,6 +167,33 @@ async function sendMessage() {
 
 onUnmounted(() => sseRef.value?.close());
 
+function copyMessage(text: string) {
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+function reInputMessage(text: string) {
+  input.value = text;
+  const el = document.querySelector<HTMLInputElement>('input[placeholder*="输入"]');
+  el?.focus();
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    const el = messagesRef.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+}
+
+watch(() => chatStore.messages.length, scrollToBottom);
+watch(() => {
+  const msgs = chatStore.messages;
+  return msgs.length > 0 ? msgs[msgs.length - 1].content.length : 0;
+}, scrollToBottom);
+
+watch(selectedPromptId, (id) => {
+  localStorage.setItem("lastPromptId", id);
+});
+
 function groupPrompts(list: any[]) {
   const groups: Record<string, any[]> = { custom: [], system: [], blender: [], gimp: [] }
   for (const p of list) {
@@ -207,7 +243,7 @@ async function refreshTools() {
           <div class="conv-title-row">
             <template v-if="editingConvId === conv.id">
               <input
-                v-model="editingConvId"
+                v-model="editingTitle"
                 @blur="renameConversation(conv.id)"
                 @keyup.enter="renameConversation(conv.id)"
                 class="title-input"
@@ -224,8 +260,8 @@ async function refreshTools() {
               <button
                 class="icon-btn"
                 @click.stop="
-                  editingConvId = conv.title;
                   editingConvId = conv.id;
+                  editingTitle = conv.title;
                 "
               >
                 ✏️
@@ -250,10 +286,16 @@ async function refreshTools() {
       <div class="messages" ref="messagesRef">
         <div v-for="msg in safeMsgs" :key="msg.id" :class="['msg', msg.role]">
           <div class="role-badge">{{ msg.role === "user" ? "🧑" : "🤖" }}</div>
-          <div
-            class="content"
-            v-html="(msg.content || '').replace(/\n/g, '<br>')"
-          ></div>
+          <div class="msg-body">
+            <div
+              class="content"
+              v-html="(msg.content || '').replace(/\n/g, '<br>')"
+            ></div>
+            <div v-if="msg.role === 'user'" class="msg-actions">
+              <button class="msg-action-btn" title="复制" @click.stop="copyMessage(msg.content)">📋</button>
+              <button class="msg-action-btn" title="重新输入" @click.stop="reInputMessage(msg.content)">↩️</button>
+            </div>
+          </div>
         </div>
         <div v-if="chatStore.isStreaming" class="streaming-indicator">
           ⏳ AI 思考中...
@@ -278,6 +320,7 @@ async function refreshTools() {
           </optgroup>
         </select>
       </div>
+      <div class="token-bar">Tokens: {{ totalTokens.toLocaleString() }}</div>
       <div class="input-area">
         <input
           v-model="input"
@@ -414,6 +457,39 @@ async function refreshTools() {
 .msg.user {
   flex-direction: row-reverse;
 }
+.msg-body {
+  position: relative;
+  max-width: 85%;
+}
+.msg-actions {
+  position: absolute;
+  top: -8px;
+  right: 4px;
+  display: none;
+  gap: 2px;
+}
+.msg.user:hover .msg-actions {
+  display: flex;
+}
+.msg-action-btn {
+  background: var(--card-bg, #f5f5f5);
+  border: 1px solid var(--border, #ddd);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 1px 4px;
+  line-height: 1.2;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.msg-action-btn:hover {
+  opacity: 1;
+}
+.msg.user .msg-action-btn {
+  background: var(--primary, #1a73e8);
+  border-color: transparent;
+  color: #fff;
+}
 .role-badge {
   width: 32px;
   height: 32px;
@@ -423,7 +499,7 @@ async function refreshTools() {
   border-radius: 50%;
   background: var(--hover-bg, #f0f0f0);
 }
-.msg .content {
+.msg-body .content {
   max-width: 85%;
   padding: 12px 18px;
   border-radius: 12px;
@@ -489,5 +565,13 @@ async function refreshTools() {
 }
 .input-area button:disabled {
   opacity: 0.5;
+}
+.token-bar {
+  padding: 2px 16px;
+  font-size: 11px;
+  color: var(--text-secondary, #999);
+  text-align: right;
+  border-top: 1px solid var(--border, #eee);
+  background: var(--card-bg, #fff);
 }
 </style>
