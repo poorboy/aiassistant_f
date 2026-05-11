@@ -4,21 +4,22 @@ import { useChatStore } from "../stores/chatStore";
 import { useMCPStore } from "../stores/mcpStore";
 import {
   getChatSSE,
-  listMCPTools,
   listMCPConnections,
   createConversation,
   listConversations,
   getChatMessages,
   updateConversation,
   deleteConversation,
+  listPrompts,
 } from "../api";
 
 const chatStore = useChatStore();
 const mcpStore = useMCPStore();
 const input = ref("");
 const sseRef = ref<EventSource | null>(null);
-
 const editingConvId = ref("");
+const prompts = ref<any[]>([]);
+const selectedPromptId = ref("");
 
 const safeConvs = computed(() =>
   Array.isArray(chatStore.conversations) ? chatStore.conversations : [],
@@ -26,18 +27,23 @@ const safeConvs = computed(() =>
 const safeMsgs = computed(() =>
   Array.isArray(chatStore.messages) ? chatStore.messages : [],
 );
-const safeTools = computed(() =>
-  Array.isArray(mcpStore.availableTools) ? mcpStore.availableTools : [],
-);
 
 onMounted(async () => {
   await loadConversations();
+  await loadPrompts();
   const convs = safeConvs.value;
   if (convs.length > 0) {
     switchConversation(convs[0].id);
   }
   await refreshTools();
 });
+
+async function loadPrompts() {
+  try {
+    const res = await listPrompts();
+    prompts.value = Array.isArray(res.data) ? res.data : [];
+  } catch {}
+}
 
 watch(
   () => chatStore.currentConvId,
@@ -123,8 +129,7 @@ async function sendMessage() {
   const respId = "resp-" + Date.now();
   chatStore.addMessage({ id: respId, role: "assistant", content: "" });
 
-  const enabled = mcpStore.enabledTools.join(",");
-  sseRef.value = getChatSSE(chatStore.currentConvId, msg, enabled);
+  sseRef.value = getChatSSE(chatStore.currentConvId, msg, selectedPromptId.value, mcpStore.enabledTools);
 
   sseRef.value.onmessage = (event) => {
     try {
@@ -153,21 +158,30 @@ async function sendMessage() {
 
 onUnmounted(() => sseRef.value?.close());
 
+function groupPrompts(list: any[]) {
+  const groups: Record<string, any[]> = { custom: [], system: [], blender: [], gimp: [] }
+  for (const p of list) {
+    const cat = p.category || 'custom'
+    if (!groups[cat]) groups[cat] = []
+    groups[cat].push(p)
+  }
+  const labelMap: Record<string, string> = { custom: '自定义', system: '系统', blender: 'Blender', gimp: 'GIMP' }
+  return Object.entries(groups)
+    .filter(([, items]) => items.length > 0)
+    .map(([key, items]) => ({ label: labelMap[key] || key, items }))
+}
+
 async function refreshTools() {
   try {
     const res = await listMCPConnections();
     const conns = Array.isArray(res.data) ? res.data : [];
-    const allTools: string[] = [];
+    const tools: string[] = [];
     for (const conn of conns) {
       if (conn.status === "connected") {
-        try {
-          const toolsRes = await listMCPTools(conn.id);
-          const tools = Array.isArray(toolsRes.data) ? toolsRes.data : [];
-          tools.forEach((t: any) => allTools.push(t.name));
-        } catch {}
+        tools.push(conn.id);
       }
     }
-    mcpStore.availableTools = allTools;
+    mcpStore.enabledTools = tools;
   } catch {}
 }
 </script>
@@ -256,17 +270,13 @@ async function refreshTools() {
         </div>
       </div>
 
-      <div class="mcp-tools-panel" v-if="safeTools.length">
-        <span class="panel-title">📎 MCP Tools</span>
-        <label v-for="tool in safeTools" :key="tool" class="tool-toggle">
-          <input
-            type="checkbox"
-            :checked="mcpStore.enabledTools.includes(tool)"
-            @change="mcpStore.toggleTool(tool)"
-          />
-          {{ tool }}
-        </label>
-        <button @click="refreshTools" class="btn-sm">刷新</button>
+      <div class="prompt-bar">
+        <select v-model="selectedPromptId" class="prompt-select">
+          <option value="">无系统角色</option>
+          <optgroup v-for="g in groupPrompts(prompts)" :key="g.label" :label="g.label">
+            <option v-for="p in g.items" :key="p.id" :value="p.id">{{ p.title }}</option>
+          </optgroup>
+        </select>
       </div>
       <div class="input-area">
         <input
@@ -437,26 +447,19 @@ async function refreshTools() {
   padding: 40px 16px;
   font-size: 14px;
 }
-.mcp-tools-panel {
-  padding: 8px 16px;
+.prompt-bar {
+  padding: 4px 16px;
   border-top: 1px solid var(--border, #eee);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
   background: var(--card-bg, #fff);
 }
-.panel-title {
-  font-weight: bold;
-  font-size: 13px;
-  margin-right: 4px;
-}
-.tool-toggle {
+.prompt-select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
   font-size: 12px;
-}
-.btn-sm {
-  font-size: 12px;
-  padding: 2px 8px;
+  background: var(--input-bg, #fff);
+  color: var(--text, #333);
 }
 .input-area {
   display: flex;
@@ -486,63 +489,5 @@ async function refreshTools() {
 }
 .input-area button:disabled {
   opacity: 0.5;
-}
-.prompt-search-bar {
-  padding: 4px 16px;
-  border-top: 1px solid var(--border, #eee);
-  background: var(--card-bg, #fff);
-}
-.prompt-search-btn {
-  font-size: 12px;
-  padding: 4px 12px;
-  border: 1px solid var(--border, #ddd);
-  border-radius: 6px;
-  background: var(--input-bg, #fff);
-  color: var(--text, #333);
-  cursor: pointer;
-}
-.prompt-search-panel {
-  margin-top: 6px;
-  border: 1px solid var(--border, #ddd);
-  border-radius: 8px;
-  padding: 8px;
-  background: var(--card-bg, #fff);
-  max-height: 200px;
-  overflow-y: auto;
-}
-.prompt-search-input-row {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-.prompt-search-input-row input {
-  flex: 1;
-  padding: 6px 10px;
-  border: 1px solid var(--border, #ddd);
-  border-radius: 6px;
-  font-size: 13px;
-  background: var(--input-bg, #fff);
-  color: var(--text, #333);
-}
-.prompt-result-item {
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.prompt-result-item:hover {
-  background: var(--hover-bg, #f0f0f0);
-}
-.prompt-result-item strong {
-  font-size: 12px;
-}
-.prompt-result-item span {
-  color: var(--text-secondary, #666);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>
