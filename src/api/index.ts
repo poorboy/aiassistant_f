@@ -9,8 +9,9 @@ const api = axios.create({
   timeout: 30000,
 })
 
-export function getChatSSE(conversationId: string, message: string, enabledTools: string) {
-  const params = new URLSearchParams({ conversation_id: conversationId, message, enabled_tools: enabledTools })
+export function getChatSSE(conversationId: string, message: string, promptId: string, enabledTools?: string[]) {
+  const tools = enabledTools && enabledTools.length > 0 ? enabledTools.join(',') : ''
+  const params = new URLSearchParams({ conversation_id: conversationId, message, prompt_id: promptId, enabled_tools: tools })
   return new EventSource(`${BASE}/api/chat/stream?${params}`)
 }
 
@@ -74,9 +75,28 @@ export function stopMCPProcess(id: string) {
   return api.post(`/mcp/connections/${id}/stop-process`)
 }
 
+export function getMCPLogs(id: string) {
+  return api.get(`/mcp/connections/${id}/logs`)
+}
+
 export function getMCPProcessStatus(id: string) {
   return api.get(`/mcp/connections/${id}/process-status`)
 }
 
+export function listPrompts() {
+  return api.get('/prompts')
+}
+
+export function createPrompt(title: string, content: string, category: string) {
+  return api.post('/prompts', { title, content, category })
+}
+
+export function updatePrompt(id: string, title: string, content: string, category: string) {
+  return api.put(`/prompts/${id}`, { title, content, category })
+}
+
+export function deletePrompt(id: string) {
+  return api.delete(`/prompts/${id}`)
+}
 
 export default api

@@ -3,6 +3,16 @@ import { createRouter, createWebHashHistory } from "vue-router";
 const routes = [
   { path: "/", name: "Chat", component: () => import("../views/ChatView.vue") },
   {
+    path: "/mcp",
+    name: "MCP",
+    component: () => import("../views/MCPView.vue"),
+  },
+  {
+    path: "/prompts",
+    name: "Prompts",
+    component: () => import("../views/PromptManageView.vue"),
+  },
+  {
     path: "/settings",
     name: "Settings",
     component: () => import("../views/SettingsView.vue"),
