@@ -1,48 +1,55 @@
 <script setup lang="ts">
 import { useThemeStore } from "./stores/themeStore";
+import { useI18nStore } from "./stores/i18nStore";
 
 const theme = useThemeStore();
+const i18n = useI18nStore();
 </script>
 
 <template>
   <div class="app-layout" :class="{ dark: theme.isDark }">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2>🤖 Blender AI</h2>
+        <h2>{{ i18n.t('appTitle') }}</h2>
+        <select class="locale-select" :value="i18n.locale" @change="i18n.setLocale(($event.target as HTMLSelectElement).value)">
+          <option value="en">EN</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+        </select>
       </div>
       <nav class="sidebar-nav">
         <router-link to="/" class="nav-item" exact-active-class="active">
           <span class="nav-icon">💬</span>
-          <span class="nav-label">聊天</span>
+          <span class="nav-label">{{ i18n.t('navChat') }}</span>
         </router-link>
         <router-link to="/mcp" class="nav-item" active-class="active">
           <span class="nav-icon">🔌</span>
-          <span class="nav-label">AI 桥接服务</span>
+          <span class="nav-label">{{ i18n.t('navMCP') }}</span>
         </router-link>
         <router-link to="/prompts" class="nav-item" active-class="active">
           <span class="nav-icon">📝</span>
-          <span class="nav-label">角色管理</span>
+          <span class="nav-label">{{ i18n.t('navPrompts') }}</span>
         </router-link>
         <router-link to="/user-prompts" class="nav-item" active-class="active">
           <span class="nav-icon">📋</span>
-          <span class="nav-label">用户提示词</span>
+          <span class="nav-label">{{ i18n.t('navUserPrompts') }}</span>
         </router-link>
         <router-link to="/model-settings" class="nav-item" active-class="active">
           <span class="nav-icon">🧠</span>
-          <span class="nav-label">模型配置</span>
+          <span class="nav-label">{{ i18n.t('navModelSettings') }}</span>
         </router-link>
         <router-link to="/settings" class="nav-item" active-class="active">
           <span class="nav-icon">⚙️</span>
-          <span class="nav-label">系统设置</span>
+          <span class="nav-label">{{ i18n.t('navSettings') }}</span>
         </router-link>
         <router-link to="/help" class="nav-item" active-class="active">
           <span class="nav-icon">❓</span>
-          <span class="nav-label">帮助</span>
+          <span class="nav-label">{{ i18n.t('navHelp') }}</span>
         </router-link>
       </nav>
       <div class="sidebar-footer">
         <button class="theme-toggle" @click="theme.toggle()">
-          {{ theme.isDark ? "☀️ 白天" : "🌙 夜间" }}
+          {{ theme.isDark ? i18n.t('themeLight') : i18n.t('themeDark') }}
         </button>
       </div>
     </aside>
@@ -127,9 +134,21 @@ textarea {
 .sidebar-header {
   padding: 20px 16px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .sidebar-header h2 {
   font-size: 16px;
+}
+.locale-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
 }
 .sidebar-nav {
   flex: 1;
