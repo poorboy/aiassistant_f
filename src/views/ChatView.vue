@@ -326,7 +326,7 @@ async function refreshTools() {
       </div>
 
       <div class="prompt-bar">
-        <select v-model="selectedModelConfigId" class="model-select" :title="i18n.t('selectModel')">
+        <select v-model="selectedModelConfigId" class="prompt-select" :title="i18n.t('selectModel')">
           <option v-for="m in modelConfigs" :key="m.id" :value="m.id">{{ m.provider }} / {{ m.name }}</option>
         </select>
         <select v-model="selectedPromptId" class="prompt-select">
