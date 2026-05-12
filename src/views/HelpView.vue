@@ -1,61 +1,60 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18nStore } from '../stores/i18nStore'
 
+const i18n = useI18nStore()
 const activeTab = ref('blender')
-
-const blenderDocs = `
-# Blender 插件配置指南
-
-## 1. 安装插件
-
-1. 打开 Blender → 编辑 → 偏好设置 → 插件
-2. 点击 "安装..."，选择 \`plugin/blender-mcp-addon.py\`
-3. 勾选启用 "Blender MCP"
-4. 回到主界面 按N键  找到 BlenderMCP  ==>  Connect to MCP Server 按钮启动  端口为  9876   启动 
- 
-`.trim()
-
-const gimpDocs = `
-# GIMP MCP 插件配置指南
-
-## 1. 安装插件
-
-1. 打开 GIMP → 编辑 → 首选项 → 文件夹 → 插件
-2. 将 \`plugin/gimp-mcp-plugin.py\` 复制到 GIMP 插件目录
-3. 重启 GIMP
-4. 启动 GIMP 进入主界面   工具 ==> MCP==>  Start MCP Server
-确保 GIMP 正在运行且插件已加载，然后在聊天中发送图像处理指令。
-`.trim()
-
-const agentDocs = `
-# AI Agent 帮助
-
-## 系统架构
-
-\`\`\`
-用户聊天 → DeepSeek API (理解意图) → MCP 协议 → Blender/GIMP → 结果回显
-\`\`\`
- 
-## 提示 
-- 支持多个 MCP 连接同时在线
-- 支持白天/夜间主题切换
-`.trim()
 </script>
 
 <template>
   <div class="help-page">
-    <header><h1>❓ 帮助中心</h1></header>
+    <header><h1>{{ i18n.t('helpTitle') }}</h1></header>
 
     <div class="tab-bar">
-      <button :class="['tab', { active: activeTab === 'blender' }]" @click="activeTab = 'blender'">🔷 Blender MCP</button>
-      <button :class="['tab', { active: activeTab === 'gimp' }]" @click="activeTab = 'gimp'">🎨 GIMP MCP</button>
-      <button :class="['tab', { active: activeTab === 'agent' }]" @click="activeTab = 'agent'">🤖 Agent 帮助</button>
+      <button :class="['tab', { active: activeTab === 'blender' }]" @click="activeTab = 'blender'">{{ i18n.t('tabBlender') }}</button>
+      <button :class="['tab', { active: activeTab === 'gimp' }]" @click="activeTab = 'gimp'">{{ i18n.t('tabGIMP') }}</button>
+      <button :class="['tab', { active: activeTab === 'agent' }]" @click="activeTab = 'agent'">{{ i18n.t('tabAgent') }}</button>
     </div>
 
     <div class="tab-content">
-      <div v-show="activeTab === 'blender'" class="markdown-body" v-html="blenderDocs.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&lt;br&gt;/g, '<br>').replace(/\n/g, '<br>').replace(/```/g, '<br>```<br>')"></div>
-      <div v-show="activeTab === 'gimp'" class="markdown-body" v-html="gimpDocs.replace(/\n/g, '<br>')"></div>
-      <div v-show="activeTab === 'agent'" class="markdown-body" v-html="agentDocs.replace(/\n/g, '<br>')"></div>
+      <div v-show="activeTab === 'blender'" class="markdown-body">
+        <h2>{{ i18n.t('helpBlenderHeading') }}</h2>
+        <h3>{{ i18n.t('helpBlenderStep1') }}</h3>
+        <ol>
+          <li>{{ i18n.t('helpBlenderStep1a') }}</li>
+          <li>{{ i18n.t('helpBlenderStep1b') }}</li>
+          <li>{{ i18n.t('helpBlenderStep1c') }}</li>
+        </ol>
+        <h3>{{ i18n.t('helpBlenderStep2') }}</h3>
+        <ol>
+          <li>{{ i18n.t('helpBlenderStep2a') }}</li>
+          <li>{{ i18n.t('helpBlenderStep2b') }}</li>
+        </ol>
+      </div>
+      <div v-show="activeTab === 'gimp'" class="markdown-body">
+        <h2>{{ i18n.t('helpGIMPHeading') }}</h2>
+        <h3>{{ i18n.t('helpGIMPStep1') }}</h3>
+        <ol>
+          <li>{{ i18n.t('helpGIMPStep1a') }}</li>
+          <li>{{ i18n.t('helpGIMPStep1b') }}</li>
+          <li>{{ i18n.t('helpGIMPStep1c') }}</li>
+        </ol>
+        <h3>{{ i18n.t('helpGIMPStep2') }}</h3>
+        <ol>
+          <li>{{ i18n.t('helpGIMPStep2a') }}</li>
+        </ol>
+        <p>{{ i18n.t('helpGIMPNote') }}</p>
+      </div>
+      <div v-show="activeTab === 'agent'" class="markdown-body">
+        <h2>{{ i18n.t('helpAgentHeading') }}</h2>
+        <h3>{{ i18n.t('helpAgentSubArch') }}</h3>
+        <pre>{{ i18n.t('helpAgentArch') }}</pre>
+        <h3>{{ i18n.t('helpAgentSubTips') }}</h3>
+        <ul>
+          <li>{{ i18n.t('helpAgentTip1') }}</li>
+          <li>{{ i18n.t('helpAgentTip2') }}</li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
