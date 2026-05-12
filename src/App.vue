@@ -6,6 +6,18 @@ import { useI18nStore } from "./stores/i18nStore";
 const theme = useThemeStore();
 const i18n = useI18nStore();
 const collapsed = ref(false);
+const localeOpen = ref(false);
+
+const locales = [
+  { value: 'en', label: 'EN' },
+  { value: 'zh', label: '中文' },
+  { value: 'ja', label: '日本語' },
+]
+
+function setLocale(l: string) {
+  i18n.setLocale(l)
+  localeOpen.value = false
+}
 </script>
 
 <template>
@@ -13,11 +25,6 @@ const collapsed = ref(false);
     <aside class="sidebar" :class="{ collapsed }">
       <div class="sidebar-header" @click="collapsed = !collapsed">
         <h2>{{ collapsed ? '🤖' : i18n.t('appTitle') }}</h2>
-        <select v-if="!collapsed" class="locale-select" :value="i18n.locale" @change="i18n.setLocale(($event.target as HTMLSelectElement).value)">
-          <option value="en">EN</option>
-          <option value="zh">中文</option>
-          <option value="ja">日本語</option>
-        </select>
       </div>
       <nav class="sidebar-nav">
         <router-link to="/" class="nav-item" exact-active-class="active">
@@ -50,9 +57,17 @@ const collapsed = ref(false);
         </router-link>
       </nav>
       <div v-if="!collapsed" class="sidebar-footer">
-        <button class="theme-toggle" @click="theme.toggle()">
-          {{ theme.isDark ? i18n.t('themeLight') : i18n.t('themeDark') }}
-        </button>
+        <div class="footer-row">
+          <button class="footer-btn" @click="theme.toggle()" :title="theme.isDark ? i18n.t('themeLight') : i18n.t('themeDark')">
+            {{ theme.isDark ? '☀️' : '🌙' }}
+          </button>
+          <div class="locale-wrap">
+            <button class="footer-btn" @click="localeOpen = !localeOpen">🌐</button>
+            <div v-if="localeOpen" class="locale-popup">
+              <button v-for="l in locales" :key="l.value" :class="['locale-opt', { active: i18n.locale === l.value }]" @click="setLocale(l.value)">{{ l.label }}</button>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
     <main class="main-content">
@@ -191,20 +206,62 @@ textarea {
   padding: 12px 8px;
   border-top: 1px solid var(--border);
 }
-.theme-toggle {
-  width: 100%;
-  padding: 8px 12px;
+.footer-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.footer-btn {
+  width: 44px;
+  height: 36px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--input-bg);
   color: var(--text);
-  font-size: 13px;
-  transition:
-    background 0.2s,
-    border-color 0.2s;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
 }
-.theme-toggle:hover {
+.footer-btn:hover {
   background: var(--hover-bg);
+}
+.locale-wrap {
+  position: relative;
+}
+.locale-popup {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+}
+.locale-opt {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.locale-opt:hover {
+  background: var(--hover-bg);
+}
+.locale-opt.active {
+  background: var(--primary);
+  color: #fff;
 }
 .sidebar.collapsed {
   width: 68px;
