@@ -23,6 +23,10 @@ const theme = useThemeStore();
           <span class="nav-icon">📝</span>
           <span class="nav-label">角色管理</span>
         </router-link>
+        <router-link to="/model-settings" class="nav-item" active-class="active">
+          <span class="nav-icon">🧠</span>
+          <span class="nav-label">模型配置</span>
+        </router-link>
         <router-link to="/settings" class="nav-item" active-class="active">
           <span class="nav-icon">⚙️</span>
           <span class="nav-label">系统设置</span>
