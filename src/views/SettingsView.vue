@@ -2,52 +2,52 @@
 import { ref, onMounted } from "vue";
 import { useSettingsStore } from "../stores/settingsStore";
 import { useI18nStore } from "../stores/i18nStore";
-import { getSettings, updateSettings, testDeepSeek } from "../api";
+import { getSettings, updateSettings, testWebhook } from "../api";
 
 const i18n = useI18nStore();
 const settingsStore = useSettingsStore();
-const activeTab = ref("model");
+const activeTab = ref("notify");
 
-const apiKey = ref("");
-const baseUrl = ref("");
-const model = ref("");
-const testResult = ref("");
+const webhookURL = ref("");
+const webhookKeywords = ref("");
+const notifyTestResult = ref("");
 const workDir = ref("");
 
 onMounted(async () => {
   try {
     const res = await getSettings();
     settingsStore.setAll(res.data);
-    apiKey.value = res.data["deepseek.api_key"] || "";
-    baseUrl.value = res.data["deepseek.base_url"] || "https://api.deepseek.com";
-    model.value = res.data["deepseek.model"] || "deepseek-v4-flash";
+    webhookURL.value = res.data["webhook.url"] || "";
+    webhookKeywords.value = res.data["webhook.keywords"] || "";
     workDir.value = res.data["blender.work_dir"] || "";
   } catch {}
 });
 
-async function saveSettings() {
+async function saveNotifySettings() {
   await updateSettings({
-    "deepseek.api_key": apiKey.value,
-    "deepseek.base_url": baseUrl.value,
-    "deepseek.model": model.value,
-    "blender.work_dir": workDir.value,
+    "webhook.url": webhookURL.value,
+    "webhook.keywords": webhookKeywords.value,
   });
   settingsStore.setAll({
-    "deepseek.api_key": apiKey.value,
-    "deepseek.base_url": baseUrl.value,
-    "deepseek.model": model.value,
-    "blender.work_dir": workDir.value,
+    "webhook.url": webhookURL.value,
+    "webhook.keywords": webhookKeywords.value,
   });
   alert(i18n.t('saved'));
 }
 
-async function testConn() {
+async function doTestNotify() {
   try {
-    await testDeepSeek();
-    testResult.value = i18n.t('testOk');
+    const res = await testWebhook()
+    notifyTestResult.value = res.data.status === "ok" ? i18n.t('testOk') : i18n.t('testFail') + ": " + (res.data.message || "");
   } catch (e: any) {
-    testResult.value = i18n.t('testFail') + ": " + (e?.message || "");
+    notifyTestResult.value = i18n.t('testFail') + ": " + (e?.response?.data?.error || e?.message || "");
   }
+}
+
+async function saveWorkDir() {
+  await updateSettings({ "blender.work_dir": workDir.value });
+  settingsStore.setAll({ "blender.work_dir": workDir.value });
+  alert(i18n.t('saved'));
 }
 </script>
 
@@ -56,29 +56,28 @@ async function testConn() {
     <header><h1>{{ i18n.t('settingsTitle') }}</h1></header>
 
     <div class="tab-bar">
-      <button :class="['tab', { active: activeTab === 'model' }]" @click="activeTab = 'model'">{{ i18n.t('tabModel') }}</button>
+      <button :class="['tab', { active: activeTab === 'notify' }]" @click="activeTab = 'notify'">🔔 通知</button>
       <button :class="['tab', { active: activeTab === 'other' }]" @click="activeTab = 'other'">{{ i18n.t('tabOther') }}</button>
     </div>
 
-    <div v-show="activeTab === 'model'" class="tab-content">
+    <div v-show="activeTab === 'notify'" class="tab-content">
       <div class="section">
         <div class="field">
-          <label>API Key</label>
-          <input v-model="apiKey" type="password" :placeholder="i18n.t('placeholderAPIKey')" />
+          <label>Webhook URL</label>
+          <input v-model="webhookURL" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..." />
         </div>
         <div class="field">
-          <label>Base URL</label>
-          <input v-model="baseUrl" :placeholder="i18n.t('placeholderBaseURL')" />
+          <label>触发关键词 (逗号分隔)</label>
+          <input v-model="webhookKeywords" placeholder="错误,失败,error,fail" />
         </div>
-        <div class="field">
-          <label>Model</label>
-          <input v-model="model" :placeholder="i18n.t('placeholderModel')" />
+        <div class="help-text">
+          <p>AI 完成任务后，若回复内容匹配关键词则自动发送 Webhook 通知。不填关键词则所有任务均触发。</p>
         </div>
         <div class="actions">
-          <button @click="testConn">{{ i18n.t('btnTestConn') }}</button>
-          <button @click="saveSettings">{{ i18n.t('save') }}</button>
+          <button @click="doTestNotify">测试通知</button>
+          <button @click="saveNotifySettings">{{ i18n.t('save') }}</button>
         </div>
-        <div v-if="testResult" class="test-result">{{ testResult }}</div>
+        <div v-if="notifyTestResult" class="test-result">{{ notifyTestResult }}</div>
       </div>
     </div>
 
@@ -92,7 +91,7 @@ async function testConn() {
           <p>{{ i18n.t('helpWorkDir') }}</p>
         </div>
         <div class="actions">
-          <button @click="saveSettings">{{ i18n.t('btnSave') }}</button>
+          <button @click="saveWorkDir">{{ i18n.t('btnSave') }}</button>
         </div>
       </div>
     </div>
@@ -109,7 +108,7 @@ header { margin-bottom: 16px; }
 .section { padding: 16px; border: 1px solid var(--border, #e0e0e0); border-radius: 8px; background: var(--card-bg, #fff); }
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--text, #333); }
-.field input, .field select { width: 100%; padding: 8px 10px; border: 1px solid var(--border, #ddd); border-radius: 6px; background: var(--input-bg, #fff); color: var(--text, #333); }
+.field input { width: 100%; padding: 8px 10px; border: 1px solid var(--border, #ddd); border-radius: 6px; background: var(--input-bg, #fff); color: var(--text, #333); }
 .help-text { margin-top: 10px; padding: 8px; background: var(--hover-bg, #f5f5f5); border-radius: 6px; font-size: 12px; color: var(--text-secondary, #666); }
 .actions { display: flex; gap: 8px; margin-top: 12px; }
 .actions button { padding: 8px 20px; background: var(--primary, #1a73e8); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
