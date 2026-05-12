@@ -54,6 +54,11 @@ const activeTab = ref('blender')
           <li>{{ i18n.t('helpAgentTip1') }}</li>
           <li>{{ i18n.t('helpAgentTip2') }}</li>
         </ul>
+        <h3>GitHub</h3>
+        <ul>
+          <li>Backend: <a href="https://github.com/poorboy/aiassistant_s" target="_blank">github.com/poorboy/aiassistant_s</a></li>
+          <li>Frontend: <a href="https://github.com/poorboy/aiassistant_f" target="_blank">github.com/poorboy/aiassistant_f</a></li>
+        </ul>
       </div>
     </div>
   </div>
@@ -82,4 +87,6 @@ header { margin-bottom: 16px; }
   white-space: pre-wrap;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+.markdown-body a { color: var(--primary, #1a73e8); }
+.markdown-body a:hover { text-decoration: underline; }
 </style>
