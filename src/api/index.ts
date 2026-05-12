@@ -140,4 +140,16 @@ export function deleteUserPrompt(id: string) {
   return api.delete(`/user-prompts/${id}`)
 }
 
+export function getWebhookSettings() {
+  return api.get('/webhook-settings')
+}
+
+export function updateWebhookSettings(data: { url: string; keywords: string }) {
+  return api.put('/webhook-settings', data)
+}
+
+export function testWebhook() {
+  return api.post('/webhook-test')
+}
+
 export default api
