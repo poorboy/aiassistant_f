@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from "vue";
 import { useChatStore } from "../stores/chatStore";
 import { useMCPStore } from "../stores/mcpStore";
+import { useI18nStore } from "../stores/i18nStore";
 import {
   getChatSSE,
   listMCPConnections,
@@ -14,6 +15,7 @@ import {
   listModelConfigs,
 } from "../api";
 
+const i18n = useI18nStore();
 const chatStore = useChatStore();
 const mcpStore = useMCPStore();
 const input = ref("");
@@ -188,7 +190,7 @@ function copyMessage(text: string) {
 
 function reInputMessage(text: string) {
   input.value = text;
-  const el = document.querySelector<HTMLInputElement>('input[placeholder*="输入"]');
+  const el = document.querySelector<HTMLInputElement>('.input-area input');
   el?.focus();
 }
 
@@ -220,7 +222,7 @@ function groupPrompts(list: any[]) {
     if (!groups[cat]) groups[cat] = []
     groups[cat].push(p)
   }
-  const labelMap: Record<string, string> = { custom: '自定义', system: '系统', blender: 'Blender', gimp: 'GIMP' }
+  const labelMap: Record<string, string> = { custom: i18n.t('groupCustom'), system: i18n.t('groupSystem'), blender: i18n.t('groupBlender'), gimp: i18n.t('groupGIMP') }
   return Object.entries(groups)
     .filter(([, items]) => items.length > 0)
     .map(([key, items]) => ({ label: labelMap[key] || key, items }))
@@ -246,8 +248,8 @@ async function refreshTools() {
     <!-- Left: Conversation list -->
     <aside class="conv-sidebar">
       <div class="conv-header">
-        <h3>💬 会话</h3>
-        <button class="new-btn" @click="newConversation">+ 新会话</button>
+        <h3>{{ i18n.t('chatTitle') }}</h3>
+        <button class="new-btn" @click="newConversation">{{ i18n.t('newConversation') }}</button>
       </div>
       <div class="conv-list">
         <div
@@ -294,9 +296,7 @@ async function refreshTools() {
             </div>
           </div>
         </div>
-        <div v-if="!safeConvs.length" class="no-conv">
-          暂无会话，点击 + 创建
-        </div>
+        <div v-if="!safeConvs.length" class="no-conv">{{ i18n.t('emptyConversation') }}</div>
       </div>
     </aside>
 
@@ -311,43 +311,37 @@ async function refreshTools() {
               v-html="(msg.content || '').replace(/\n/g, '<br>')"
             ></div>
             <div v-if="msg.role === 'user'" class="msg-actions">
-              <button class="msg-action-btn" title="复制" @click.stop="copyMessage(msg.content)">📋</button>
-              <button class="msg-action-btn" title="重新输入" @click.stop="reInputMessage(msg.content)">↩️</button>
+              <button class="msg-action-btn" :title="i18n.t('copy')" @click.stop="copyMessage(msg.content)">📋</button>
+              <button class="msg-action-btn" :title="i18n.t('reinput')" @click.stop="reInputMessage(msg.content)">↩️</button>
             </div>
           </div>
         </div>
-        <div v-if="chatStore.isStreaming" class="streaming-indicator">
-          ⏳ AI 思考中...
-        </div>
+        <div v-if="chatStore.isStreaming" class="streaming-indicator">{{ i18n.t('streamingIndicator') }}</div>
         <div
           v-if="!safeMsgs.length && !chatStore.isStreaming"
           class="empty-hint"
         >
-          {{
-            chatStore.currentConvId
-              ? "输入消息开始对话"
-              : "请选择或创建一个会话"
-          }}
+          {{ chatStore.currentConvId ? i18n.t('chatStart') : i18n.t('selectConv') }}
         </div>
       </div>
 
       <div class="prompt-bar">
-        <select v-model="selectedModelConfigId" class="model-select" title="选择模型">
+        <select v-model="selectedModelConfigId" class="model-select" :title="i18n.t('selectModel')">
           <option v-for="m in modelConfigs" :key="m.id" :value="m.id">{{ m.provider }} / {{ m.name }}</option>
         </select>
         <select v-model="selectedPromptId" class="prompt-select">
-          <option value="">无系统角色</option>
+          <option value="">{{ i18n.t('noRole') }}</option>
           <optgroup v-for="g in groupPrompts(prompts)" :key="g.label" :label="g.label">
             <option v-for="p in g.items" :key="p.id" :value="p.id">{{ p.title }}</option>
           </optgroup>
         </select>
-        <span class="token-label">Tokens: {{ totalTokens.toLocaleString() }}</span>
+        <span class="token-label">{{ i18n.t('tokenLabel') }}: {{ totalTokens.toLocaleString() }}</span>
       </div>
       <div class="input-area">
         <input
           v-model="input"
           @keyup.enter="sendMessage"
-          placeholder="💬 输入消息..."
+          :placeholder="i18n.t('chatPlaceholder')"
           :disabled="chatStore.isStreaming || !chatStore.currentConvId"
         />
         <button
@@ -356,7 +350,7 @@ async function refreshTools() {
             chatStore.isStreaming || !input.trim() || !chatStore.currentConvId
           "
         >
-          发送
+          {{ i18n.t('send') }}
         </button>
       </div>
     </div>
