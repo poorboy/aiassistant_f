@@ -18,6 +18,19 @@ export interface Conversation {
   updated_at: string
 }
 
+export interface ModelConfigItem {
+  id: string
+  provider: string
+  name: string
+  model: string
+  base_url: string
+  api_key: string
+  proxy_url: string
+  is_active: number
+  created_at: string
+  updated_at: string
+}
+
 export const useChatStore = defineStore('chat', () => {
   const conversations = ref<Conversation[]>([])
   const currentConvId = ref<string>('')
