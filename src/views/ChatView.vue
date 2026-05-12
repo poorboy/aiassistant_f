@@ -11,6 +11,7 @@ import {
   updateConversation,
   deleteConversation,
   listPrompts,
+  listModelConfigs,
 } from "../api";
 
 const chatStore = useChatStore();
@@ -22,6 +23,8 @@ const editingTitle = ref("");
 const messagesRef = ref<HTMLElement | null>(null);
 const prompts = ref<any[]>([]);
 const selectedPromptId = ref(localStorage.getItem("lastPromptId") || "");
+const modelConfigs = ref<any[]>([]);
+const selectedModelConfigId = ref(localStorage.getItem("lastModelConfigId") || "");
 
 const safeConvs = computed(() =>
   Array.isArray(chatStore.conversations) ? chatStore.conversations : [],
@@ -37,6 +40,7 @@ const totalTokens = computed(() => {
 onMounted(async () => {
   await loadConversations();
   await loadPrompts();
+  await loadModelConfigs();
   const convs = safeConvs.value;
   if (convs.length > 0) {
     switchConversation(convs[0].id);
@@ -48,6 +52,17 @@ async function loadPrompts() {
   try {
     const res = await listPrompts();
     prompts.value = Array.isArray(res.data) ? res.data : [];
+  } catch {}
+}
+
+async function loadModelConfigs() {
+  try {
+    const res = await listModelConfigs();
+    modelConfigs.value = Array.isArray(res.data) ? res.data : [];
+    if (!selectedModelConfigId.value && modelConfigs.value.length > 0) {
+      const active = modelConfigs.value.find((m: any) => m.is_active === 1) || modelConfigs.value[0]
+      selectedModelConfigId.value = active.id
+    }
   } catch {}
 }
 
@@ -138,7 +153,7 @@ async function sendMessage() {
   const respId = "resp-" + Date.now();
   chatStore.addMessage({ id: respId, role: "assistant", content: "" });
 
-  sseRef.value = getChatSSE(chatStore.currentConvId, msg, selectedPromptId.value, mcpStore.enabledTools);
+  sseRef.value = getChatSSE(chatStore.currentConvId, msg, selectedPromptId.value, mcpStore.enabledTools, selectedModelConfigId.value);
 
   sseRef.value.onmessage = (event) => {
     try {
@@ -192,6 +207,10 @@ watch(() => {
 
 watch(selectedPromptId, (id) => {
   localStorage.setItem("lastPromptId", id);
+});
+
+watch(selectedModelConfigId, (id) => {
+  localStorage.setItem("lastModelConfigId", id);
 });
 
 function groupPrompts(list: any[]) {
@@ -313,6 +332,9 @@ async function refreshTools() {
       </div>
 
       <div class="prompt-bar">
+        <select v-model="selectedModelConfigId" class="model-select" title="选择模型">
+          <option v-for="m in modelConfigs" :key="m.id" :value="m.id">{{ m.provider }} / {{ m.name }}</option>
+        </select>
         <select v-model="selectedPromptId" class="prompt-select">
           <option value="">无系统角色</option>
           <optgroup v-for="g in groupPrompts(prompts)" :key="g.label" :label="g.label">
