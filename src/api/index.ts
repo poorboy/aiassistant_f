@@ -9,9 +9,10 @@ const api = axios.create({
   timeout: 30000,
 })
 
-export function getChatSSE(conversationId: string, message: string, promptId: string, enabledTools?: string[]) {
+export function getChatSSE(conversationId: string, message: string, promptId: string, enabledTools?: string[], modelConfigId?: string) {
   const tools = enabledTools && enabledTools.length > 0 ? enabledTools.join(',') : ''
   const params = new URLSearchParams({ conversation_id: conversationId, message, prompt_id: promptId, enabled_tools: tools })
+  if (modelConfigId) params.set('model_config_id', modelConfigId)
   return new EventSource(`${BASE}/api/chat/stream?${params}`)
 }
 
@@ -97,6 +98,30 @@ export function updatePrompt(id: string, title: string, content: string, categor
 
 export function deletePrompt(id: string) {
   return api.delete(`/prompts/${id}`)
+}
+
+export function listModelConfigs() {
+  return api.get('/model-configs')
+}
+
+export function createModelConfig(data: { provider: string; name: string; model: string; base_url: string; api_key: string; proxy_url: string }) {
+  return api.post('/model-configs', data)
+}
+
+export function updateModelConfig(id: string, data: { provider: string; name: string; model: string; base_url: string; api_key: string; proxy_url: string }) {
+  return api.put(`/model-configs/${id}`, data)
+}
+
+export function deleteModelConfig(id: string) {
+  return api.delete(`/model-configs/${id}`)
+}
+
+export function setActiveModelConfig(id: string) {
+  return api.post(`/model-configs/${id}/activate`)
+}
+
+export function testModelConfig(id: string) {
+  return api.post(`/model-configs/${id}/test`)
 }
 
 export default api
