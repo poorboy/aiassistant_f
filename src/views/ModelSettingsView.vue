@@ -8,63 +8,21 @@ import {
   deleteModelConfig,
   setActiveModelConfig,
   testModelConfig,
-  getSettings,
-  updateSettings,
-  testDeepSeek,
 } from "../api";
-import { useSettingsStore } from "../stores/settingsStore";
 
 const i18n = useI18nStore();
-const settingsStore = useSettingsStore();
 const modelConfigs = ref<any[]>([]);
 const editingId = ref("");
 const showForm = ref(false);
 const formData = ref({ provider: "", name: "", model: "", base_url: "", api_key: "", proxy_url: "" });
 const testResult = ref("");
-const legacyApiKey = ref("");
-const legacyBaseUrl = ref("");
-const legacyModel = ref("");
-const legacyTestResult = ref("");
 
-onMounted(async () => {
-  await loadData();
-});
-
+onMounted(loadData);
 async function loadData() {
   try {
     const res = await listModelConfigs();
     modelConfigs.value = Array.isArray(res.data) ? res.data : [];
   } catch {}
-  try {
-    const res = await getSettings();
-    settingsStore.setAll(res.data);
-    legacyApiKey.value = res.data["deepseek.api_key"] || "";
-    legacyBaseUrl.value = res.data["deepseek.base_url"] || "https://api.deepseek.com";
-    legacyModel.value = res.data["deepseek.model"] || "deepseek-v4-flash";
-  } catch {}
-}
-
-async function saveLegacySettings() {
-  await updateSettings({
-    "deepseek.api_key": legacyApiKey.value,
-    "deepseek.base_url": legacyBaseUrl.value,
-    "deepseek.model": legacyModel.value,
-  });
-  settingsStore.setAll({
-    "deepseek.api_key": legacyApiKey.value,
-    "deepseek.base_url": legacyBaseUrl.value,
-    "deepseek.model": legacyModel.value,
-  });
-  alert(i18n.t('saved'));
-}
-
-async function testLegacy() {
-  try {
-    await testDeepSeek();
-    legacyTestResult.value = i18n.t('testOk');
-  } catch (e: any) {
-    legacyTestResult.value = i18n.t('testFail') + ": " + (e?.response?.data?.message || e?.message || "");
-  }
 }
 
 function openNewForm() {
@@ -241,28 +199,7 @@ function fillPreset(p: typeof presets[number]) {
 
         <div v-if="testResult" class="test-result">{{ testResult }}</div>
 
-        <details class="legacy-section">
-          <summary>{{ i18n.t('legacySection') }}</summary>
-          <div class="legacy-body">
-            <div class="field">
-              <label>{{ i18n.t('legacyAPIKey') }}</label>
-              <input v-model="legacyApiKey" type="password" :placeholder="i18n.t('placeholderAPIKey')" />
-            </div>
-            <div class="field">
-              <label>{{ i18n.t('legacyBaseURL') }}</label>
-              <input v-model="legacyBaseUrl" :placeholder="i18n.t('placeholderBaseURL')" />
-            </div>
-            <div class="field">
-              <label>{{ i18n.t('legacyModel') }}</label>
-              <input v-model="legacyModel" :placeholder="i18n.t('placeholderModel')" />
-            </div>
-            <div class="actions">
-              <button class="btn-sm" @click="testLegacy">{{ i18n.t('btnTestConn') }}</button>
-              <button class="btn-sm btn-primary" @click="saveLegacySettings">{{ i18n.t('save') }}</button>
-            </div>
-            <div v-if="legacyTestResult" class="test-result">{{ legacyTestResult }}</div>
-          </div>
-        </details>
+
       </div>
     </div>
   </div>
