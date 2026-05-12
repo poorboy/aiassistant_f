@@ -173,10 +173,6 @@ function fillPreset(p: typeof presets[number]) {
     <header><h1>{{ i18n.t('modelTitle') }}</h1></header>
 
     <div class="layout">
-      <aside class="side-menu">
-        <div class="menu-item active" @click="testResult = ''">{{ i18n.t('menuModelConfig') }}</div>
-      </aside>
-
       <div class="main-area">
         <div class="section-header">
           <h3>{{ i18n.t('modelListTitle') }}</h3>
