@@ -67,7 +67,7 @@ function setLocale(l: string) {
               <button v-for="l in locales" :key="l.value" :class="['locale-opt', { active: i18n.locale === l.value }]" @click="setLocale(l.value)">{{ l.label }}</button>
             </div>
           </div>
-          <button class="footer-btn collapse-btn" @click="collapsed = !collapsed" :title="collapsed ? 'Expand' : 'Collapse'">◀</button>
+          <button class="footer-btn collapse-btn" @click="collapsed = !collapsed" :title="collapsed ? 'Expand' : 'Collapse'">{{ collapsed ? '▶' : '◀' }}</button>
         </div>
       </div>
     </aside>
