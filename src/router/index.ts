@@ -23,6 +23,11 @@ const routes = [
     component: () => import("../views/ModelSettingsView.vue"),
   },
   {
+    path: "/user-prompts",
+    name: "UserPrompts",
+    component: () => import("../views/UserPromptView.vue"),
+  },
+  {
     path: "/help",
     name: "Help",
     component: () => import("../views/HelpView.vue"),
