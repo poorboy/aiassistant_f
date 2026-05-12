@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useI18nStore } from "../stores/i18nStore";
 import { listUserPrompts, createUserPrompt, updateUserPrompt, deleteUserPrompt } from "../api";
 
+const i18n = useI18nStore();
 const prompts = ref<any[]>([]);
 const showForm = ref(false);
 const editingId = ref("");
@@ -45,7 +47,7 @@ async function save() {
 }
 
 async function remove(id: string) {
-  if (!confirm("确认删除？")) return;
+  if (!confirm(i18n.t('confirmDelete'))) return;
   try {
     await deleteUserPrompt(id);
     await loadData();
@@ -60,26 +62,26 @@ function insertToChat(text: string) {
 <template>
   <div class="user-prompt-page">
     <header>
-      <h1>📋 用户提示词</h1>
-      <span class="subtitle">保存常用的消息模板，一键复制到聊天输入框</span>
+      <h1>{{ i18n.t('upTitle') }}</h1>
+      <span class="subtitle">{{ i18n.t('upSubtitle') }}</span>
     </header>
 
     <div class="toolbar">
-      <button class="btn-primary" @click="openNew">+ 新建提示词</button>
+      <button class="btn-primary" @click="openNew">{{ i18n.t('newPromptBtn') }}</button>
     </div>
 
     <div v-if="showForm" class="form-card">
       <div class="field">
-        <label>标题</label>
-        <input v-model="formTitle" placeholder="提示词标题" />
+        <label>{{ i18n.t('fieldTitle') }}</label>
+        <input v-model="formTitle" :placeholder="i18n.t('placeholderTitle2')" />
       </div>
       <div class="field">
-        <label>内容</label>
-        <textarea v-model="formContent" rows="4" placeholder="提示词内容，发送给 AI 的消息"></textarea>
+        <label>{{ i18n.t('fieldContent2') }}</label>
+        <textarea v-model="formContent" rows="4" :placeholder="i18n.t('placeholderContent2')"></textarea>
       </div>
       <div class="form-actions">
-        <button class="btn-primary" @click="save">{{ editingId ? '更新' : '创建' }}</button>
-        <button class="btn-cancel" @click="showForm = false">取消</button>
+        <button class="btn-primary" @click="save">{{ editingId ? i18n.t('update') : i18n.t('create') }}</button>
+        <button class="btn-cancel" @click="showForm = false">{{ i18n.t('cancel') }}</button>
       </div>
     </div>
 
@@ -88,103 +90,41 @@ function insertToChat(text: string) {
         <div class="card-header">
           <strong>{{ item.title }}</strong>
           <div class="card-actions">
-            <button class="btn-sm" @click="insertToChat(item.content)" title="复制到剪贴板">📋 复制</button>
-            <button class="btn-sm" @click="openEdit(item)">编辑</button>
-            <button class="btn-sm btn-danger" @click="remove(item.id)">删除</button>
+            <button class="btn-sm" @click="insertToChat(item.content)" :title="i18n.t('copyClipboard')">{{ i18n.t('copyBtn') }}</button>
+            <button class="btn-sm" @click="openEdit(item)">{{ i18n.t('edit') }}</button>
+            <button class="btn-sm btn-danger" @click="remove(item.id)">{{ i18n.t('delete') }}</button>
           </div>
         </div>
         <div class="card-body">{{ item.content }}</div>
       </div>
-      <div v-if="!prompts.length" class="empty">暂无提示词，点击上方按钮创建。</div>
+      <div v-if="!prompts.length" class="empty">{{ i18n.t('emptyPrompts') }}</div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.user-prompt-page {
-  padding: 24px 32px;
-}
+.user-prompt-page { padding: 24px 32px; }
 header { margin-bottom: 16px; }
 header h1 { margin: 0 0 4px; }
 .subtitle { font-size: 13px; color: var(--text-secondary, #666); }
 .toolbar { margin-bottom: 16px; }
-.btn-primary {
-  padding: 6px 16px;
-  background: var(--primary, #1a73e8);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-}
+.btn-primary { padding: 6px 16px; background: var(--primary, #1a73e8); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
 .btn-primary:hover { background: var(--primary-hover, #1557b0); }
-.btn-cancel {
-  padding: 6px 16px;
-  background: none;
-  border: 1px solid var(--border, #ddd);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--text, #333);
-}
-.form-card {
-  border: 1px solid var(--border, #e0e0e0);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  background: var(--card-bg, #fff);
-}
+.btn-cancel { padding: 6px 16px; background: none; border: 1px solid var(--border, #ddd); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text, #333); }
+.form-card { border: 1px solid var(--border, #e0e0e0); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: var(--card-bg, #fff); }
 .field { margin-bottom: 12px; }
 .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text, #333); }
-.field input, .field textarea {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--border, #ddd);
-  border-radius: 6px;
-  background: var(--input-bg, #fff);
-  color: var(--text, #333);
-  font-size: 13px;
-  resize: vertical;
-}
+.field input, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border, #ddd); border-radius: 6px; background: var(--input-bg, #fff); color: var(--text, #333); font-size: 13px; resize: vertical; }
 .form-actions { display: flex; gap: 8px; }
 .list { display: flex; flex-direction: column; gap: 8px; }
-.card {
-  border: 1px solid var(--border, #e0e0e0);
-  border-radius: 8px;
-  padding: 12px;
-  background: var(--card-bg, #fff);
-}
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
+.card { border: 1px solid var(--border, #e0e0e0); border-radius: 8px; padding: 12px; background: var(--card-bg, #fff); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .card-header strong { font-size: 14px; }
 .card-actions { display: flex; gap: 6px; }
-.card-body {
-  font-size: 13px;
-  color: var(--text-secondary, #666);
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.5;
-}
-.btn-sm {
-  padding: 4px 10px;
-  border: 1px solid var(--border, #ddd);
-  border-radius: 4px;
-  font-size: 12px;
-  background: var(--input-bg, #fff);
-  color: var(--text, #333);
-  cursor: pointer;
-}
+.card-body { font-size: 13px; color: var(--text-secondary, #666); white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.btn-sm { padding: 4px 10px; border: 1px solid var(--border, #ddd); border-radius: 4px; font-size: 12px; background: var(--input-bg, #fff); color: var(--text, #333); cursor: pointer; }
 .btn-sm:hover { background: var(--hover-bg, #f0f0f0); }
 .btn-danger { color: #d93025; border-color: #d93025; }
 .btn-danger:hover { background: #fce8e6; }
-.empty {
-  text-align: center;
-  padding: 40px 16px;
-  color: var(--text-secondary, #999);
-  font-size: 14px;
-}
+.empty { text-align: center; padding: 40px 16px; color: var(--text-secondary, #999); font-size: 14px; }
 </style>
