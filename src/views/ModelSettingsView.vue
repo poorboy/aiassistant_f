@@ -175,7 +175,6 @@ function fillPreset(p: typeof presets[number]) {
     <div class="layout">
       <aside class="side-menu">
         <div class="menu-item active" @click="testResult = ''">{{ i18n.t('menuModelConfig') }}</div>
-        <div class="menu-item" @click="testResult = ''">{{ i18n.t('menuProxy') }}</div>
       </aside>
 
       <div class="main-area">
@@ -233,7 +232,6 @@ function fillPreset(p: typeof presets[number]) {
             </div>
             <div class="card-detail">
               <div>Base URL: {{ item.base_url || i18n.t('unset') }}</div>
-              <div>{{ i18n.t('fieldProxyURL') }}: {{ item.proxy_url || i18n.t('none') }}</div>
             </div>
             <div class="card-actions">
               <button class="btn-sm" @click="setActive(item.id)" :disabled="item.is_active === 1">{{ i18n.t('btnSetActive') }}</button>
