@@ -124,4 +124,20 @@ export function testModelConfig(id: string) {
   return api.post(`/model-configs/${id}/test`)
 }
 
+export function listUserPrompts() {
+  return api.get('/user-prompts')
+}
+
+export function createUserPrompt(title: string, content: string) {
+  return api.post('/user-prompts', { title, content })
+}
+
+export function updateUserPrompt(id: string, title: string, content: string) {
+  return api.put(`/user-prompts/${id}`, { title, content })
+}
+
+export function deleteUserPrompt(id: string) {
+  return api.delete(`/user-prompts/${id}`)
+}
+
 export default api
