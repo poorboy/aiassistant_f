@@ -1,17 +1,19 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useThemeStore } from "./stores/themeStore";
 import { useI18nStore } from "./stores/i18nStore";
 
 const theme = useThemeStore();
 const i18n = useI18nStore();
+const collapsed = ref(false);
 </script>
 
 <template>
   <div class="app-layout" :class="{ dark: theme.isDark }">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>{{ i18n.t('appTitle') }}</h2>
-        <select class="locale-select" :value="i18n.locale" @change="i18n.setLocale(($event.target as HTMLSelectElement).value)">
+    <aside class="sidebar" :class="{ collapsed }">
+      <div class="sidebar-header" @click="collapsed = !collapsed">
+        <h2>{{ collapsed ? '🤖' : i18n.t('appTitle') }}</h2>
+        <select v-if="!collapsed" class="locale-select" :value="i18n.locale" @change="i18n.setLocale(($event.target as HTMLSelectElement).value)">
           <option value="en">EN</option>
           <option value="zh">中文</option>
           <option value="ja">日本語</option>
@@ -20,34 +22,34 @@ const i18n = useI18nStore();
       <nav class="sidebar-nav">
         <router-link to="/" class="nav-item" exact-active-class="active">
           <span class="nav-icon">💬</span>
-          <span class="nav-label">{{ i18n.t('navChat') }}</span>
+          <span v-if="!collapsed" class="nav-label">{{ i18n.t('navChat') }}</span>
         </router-link>
         <router-link to="/mcp" class="nav-item" active-class="active">
           <span class="nav-icon">🔌</span>
-          <span class="nav-label">{{ i18n.t('navMCP') }}</span>
+          <span v-if="!collapsed" class="nav-label">{{ i18n.t('navMCP') }}</span>
         </router-link>
         <router-link to="/prompts" class="nav-item" active-class="active">
           <span class="nav-icon">📝</span>
-          <span class="nav-label">{{ i18n.t('navPrompts') }}</span>
+          <span v-if="!collapsed" class="nav-label">{{ i18n.t('navPrompts') }}</span>
         </router-link>
         <router-link to="/user-prompts" class="nav-item" active-class="active">
           <span class="nav-icon">📋</span>
-          <span class="nav-label">{{ i18n.t('navUserPrompts') }}</span>
+          <span v-if="!collapsed" class="nav-label">{{ i18n.t('navUserPrompts') }}</span>
         </router-link>
         <router-link to="/model-settings" class="nav-item" active-class="active">
           <span class="nav-icon">🧠</span>
-          <span class="nav-label">{{ i18n.t('navModelSettings') }}</span>
+          <span v-if="!collapsed" class="nav-label">{{ i18n.t('navModelSettings') }}</span>
         </router-link>
         <router-link to="/settings" class="nav-item" active-class="active">
           <span class="nav-icon">⚙️</span>
-          <span class="nav-label">{{ i18n.t('navSettings') }}</span>
+          <span v-if="!collapsed" class="nav-label">{{ i18n.t('navSettings') }}</span>
         </router-link>
         <router-link to="/help" class="nav-item" active-class="active">
           <span class="nav-icon">❓</span>
-          <span class="nav-label">{{ i18n.t('navHelp') }}</span>
+          <span v-if="!collapsed" class="nav-label">{{ i18n.t('navHelp') }}</span>
         </router-link>
       </nav>
-      <div class="sidebar-footer">
+      <div v-if="!collapsed" class="sidebar-footer">
         <button class="theme-toggle" @click="theme.toggle()">
           {{ theme.isDark ? i18n.t('themeLight') : i18n.t('themeDark') }}
         </button>
@@ -203,6 +205,28 @@ textarea {
 }
 .theme-toggle:hover {
   background: var(--hover-bg);
+}
+.sidebar.collapsed {
+  width: 68px;
+  min-width: 68px;
+}
+.sidebar.collapsed .sidebar-header {
+  cursor: pointer;
+  padding: 20px 8px;
+  align-items: center;
+}
+.sidebar.collapsed .sidebar-header h2 {
+  font-size: 22px;
+  text-align: center;
+  width: 100%;
+}
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 10px 4px;
+}
+.sidebar.collapsed .nav-icon {
+  width: auto;
+  font-size: 22px;
 }
 .main-content {
   flex: 1;
