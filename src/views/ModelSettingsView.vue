@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
+import { useI18nStore } from "../stores/i18nStore";
 import {
   listModelConfigs,
   createModelConfig,
@@ -13,6 +14,7 @@ import {
 } from "../api";
 import { useSettingsStore } from "../stores/settingsStore";
 
+const i18n = useI18nStore();
 const settingsStore = useSettingsStore();
 const modelConfigs = ref<any[]>([]);
 const editingId = ref("");
@@ -53,15 +55,15 @@ async function saveLegacySettings() {
     "deepseek.base_url": legacyBaseUrl.value,
     "deepseek.model": legacyModel.value,
   });
-  alert("传统设置已保存");
+  alert(i18n.t('saved'));
 }
 
 async function testLegacy() {
   try {
     await testDeepSeek();
-    legacyTestResult.value = "✅ 连接成功";
+    legacyTestResult.value = i18n.t('testOk');
   } catch (e: any) {
-    legacyTestResult.value = "❌ 连接失败: " + (e?.response?.data?.message || e?.message || "");
+    legacyTestResult.value = i18n.t('testFail') + ": " + (e?.response?.data?.message || e?.message || "");
   }
 }
 
@@ -86,7 +88,7 @@ function openEdit(item: any) {
 
 async function saveForm() {
   if (!formData.value.provider || !formData.value.name || !formData.value.model) {
-    alert("供应商、名称、模型为必填项");
+    alert(i18n.t('validateRequired'));
     return;
   }
   try {
@@ -98,12 +100,12 @@ async function saveForm() {
     showForm.value = false;
     await loadData();
   } catch (e: any) {
-    alert("保存失败: " + (e?.response?.data?.error || e?.message || ""));
+    alert(i18n.t('saveFail') + ": " + (e?.response?.data?.error || e?.message || ""));
   }
 }
 
 async function removeItem(id: string) {
-  if (!confirm("确认删除此模型配置？")) return;
+  if (!confirm(i18n.t('confirmDelete'))) return;
   try {
     await deleteModelConfig(id);
     await loadData();
@@ -118,12 +120,12 @@ async function setActive(id: string) {
 }
 
 async function testModel(id: string) {
-  testResult.value = "测试中...";
+  testResult.value = i18n.t('testInProgress');
   try {
     const res = await testModelConfig(id);
-    testResult.value = res.data.status === "ok" ? "✅ 连接成功" : "❌ 失败: " + res.data.message;
+    testResult.value = res.data.status === "ok" ? i18n.t('testOk') : i18n.t('testFail') + ": " + res.data.message;
   } catch (e: any) {
-    testResult.value = "❌ 错误: " + (e?.response?.data?.message || e?.message || "");
+    testResult.value = i18n.t('testFail') + ": " + (e?.response?.data?.message || e?.message || "");
   }
 }
 
@@ -168,110 +170,101 @@ function fillPreset(p: typeof presets[number]) {
 
 <template>
   <div class="model-settings-page">
-    <header><h1>⚙️ 模型设置</h1></header>
+    <header><h1>{{ i18n.t('modelTitle') }}</h1></header>
 
     <div class="layout">
       <aside class="side-menu">
-        <div class="menu-item active" @click="testResult = ''">模型配置</div>
-        <div class="menu-item" @click="testResult = ''">代理设置</div>
+        <div class="menu-item active" @click="testResult = ''">{{ i18n.t('menuModelConfig') }}</div>
+        <div class="menu-item" @click="testResult = ''">{{ i18n.t('menuProxy') }}</div>
       </aside>
 
       <div class="main-area">
-        <!-- model configs list -->
         <div class="section-header">
-          <h3>模型配置列表</h3>
-          <button class="btn-primary" @click="openNewForm">+ 添加模型</button>
+          <h3>{{ i18n.t('modelListTitle') }}</h3>
+          <button class="btn-primary" @click="openNewForm">{{ i18n.t('addModel') }}</button>
         </div>
 
-        <!-- inline form -->
         <div v-if="showForm" class="form-card">
           <div class="preset-row">
-            <span class="preset-label">快速填充:</span>
-            <button
-              v-for="p in presets"
-              :key="p.label"
-              class="preset-btn"
-              @click="fillPreset(p)"
-            >{{ p.label }}</button>
+            <span class="preset-label">{{ i18n.t('presetLabel') }}</span>
+            <button v-for="p in presets" :key="p.label" class="preset-btn" @click="fillPreset(p)">{{ p.label }}</button>
           </div>
           <div class="form-row">
             <div class="field">
-              <label>供应商</label>
-              <input v-model="formData.provider" placeholder="例如: DeepSeek, OpenAI, Anthropic" />
+              <label>{{ i18n.t('fieldProvider') }}</label>
+              <input v-model="formData.provider" :placeholder="i18n.t('placeholderProvider')" />
             </div>
             <div class="field">
-              <label>名称</label>
-              <input v-model="formData.name" placeholder="显示名称" />
+              <label>{{ i18n.t('fieldName') }}</label>
+              <input v-model="formData.name" :placeholder="i18n.t('placeholderName')" />
             </div>
           </div>
           <div class="form-row">
             <div class="field">
-              <label>模型</label>
-              <input v-model="formData.model" placeholder="deepseek-chat / gpt-4o / claude-3..." />
+              <label>{{ i18n.t('fieldModel') }}</label>
+              <input v-model="formData.model" :placeholder="i18n.t('placeholderModel')" />
             </div>
             <div class="field">
-              <label>Base URL</label>
-              <input v-model="formData.base_url" placeholder="https://api.deepseek.com" />
+              <label>{{ i18n.t('fieldBaseURL') }}</label>
+              <input v-model="formData.base_url" :placeholder="i18n.t('placeholderBaseURL')" />
             </div>
           </div>
           <div class="field">
-            <label>API Key</label>
-            <input v-model="formData.api_key" type="password" placeholder="sk-..." />
+            <label>{{ i18n.t('fieldAPIKey') }}</label>
+            <input v-model="formData.api_key" type="password" :placeholder="i18n.t('placeholderAPIKey')" />
           </div>
           <div class="field">
-            <label>代理地址</label>
-            <input v-model="formData.proxy_url" placeholder="http://127.0.0.1:7890（留空直连）" />
+            <label>{{ i18n.t('fieldProxyURL') }}</label>
+            <input v-model="formData.proxy_url" :placeholder="i18n.t('placeholderProxy')" />
           </div>
           <div class="form-actions">
-            <button class="btn-primary" @click="saveForm">{{ editingId ? '更新' : '创建' }}</button>
-            <button class="btn-cancel" @click="showForm = false">取消</button>
+            <button class="btn-primary" @click="saveForm">{{ editingId ? i18n.t('update') : i18n.t('create') }}</button>
+            <button class="btn-cancel" @click="showForm = false">{{ i18n.t('cancel') }}</button>
           </div>
         </div>
 
-        <!-- card list -->
         <div v-for="(items, provider) in groupedConfigs" :key="provider" class="provider-group">
           <h4 class="provider-title">{{ provider }}</h4>
           <div v-for="item in items" :key="item.id" class="model-card" :class="{ active: item.is_active === 1 }">
             <div class="card-header">
               <strong>{{ item.name }}</strong>
               <span class="model-tag">{{ item.model }}</span>
-              <span v-if="item.is_active === 1" class="active-badge">当前</span>
+              <span v-if="item.is_active === 1" class="active-badge">{{ i18n.t('badgeActive') }}</span>
             </div>
             <div class="card-detail">
-              <div>Base URL: {{ item.base_url || '未设置' }}</div>
-              <div>代理: {{ item.proxy_url || '无' }}</div>
+              <div>Base URL: {{ item.base_url || i18n.t('unset') }}</div>
+              <div>{{ i18n.t('fieldProxyURL') }}: {{ item.proxy_url || i18n.t('none') }}</div>
             </div>
             <div class="card-actions">
-              <button class="btn-sm" @click="setActive(item.id)" :disabled="item.is_active === 1">设为当前</button>
-              <button class="btn-sm" @click="testModel(item.id)">测试</button>
-              <button class="btn-sm" @click="openEdit(item)">编辑</button>
-              <button class="btn-sm btn-danger" @click="removeItem(item.id)">删除</button>
+              <button class="btn-sm" @click="setActive(item.id)" :disabled="item.is_active === 1">{{ i18n.t('btnSetActive') }}</button>
+              <button class="btn-sm" @click="testModel(item.id)">{{ i18n.t('test') }}</button>
+              <button class="btn-sm" @click="openEdit(item)">{{ i18n.t('edit') }}</button>
+              <button class="btn-sm btn-danger" @click="removeItem(item.id)">{{ i18n.t('delete') }}</button>
             </div>
           </div>
         </div>
-        <div v-if="!modelConfigs.length" class="empty-state">暂无模型配置，请点击上方"添加模型"。</div>
+        <div v-if="!modelConfigs.length" class="empty-state">{{ i18n.t('emptyModels') }}</div>
 
         <div v-if="testResult" class="test-result">{{ testResult }}</div>
 
-        <!-- deprecated legacy settings -->
         <details class="legacy-section">
-          <summary>传统单模型设置（将逐步弃用）</summary>
+          <summary>{{ i18n.t('legacySection') }}</summary>
           <div class="legacy-body">
             <div class="field">
-              <label>API Key</label>
-              <input v-model="legacyApiKey" type="password" placeholder="sk-..." />
+              <label>{{ i18n.t('legacyAPIKey') }}</label>
+              <input v-model="legacyApiKey" type="password" :placeholder="i18n.t('placeholderAPIKey')" />
             </div>
             <div class="field">
-              <label>Base URL</label>
-              <input v-model="legacyBaseUrl" placeholder="https://api.deepseek.com" />
+              <label>{{ i18n.t('legacyBaseURL') }}</label>
+              <input v-model="legacyBaseUrl" :placeholder="i18n.t('placeholderBaseURL')" />
             </div>
             <div class="field">
-              <label>Model</label>
-              <input v-model="legacyModel" placeholder="deepseek-v4-flash" />
+              <label>{{ i18n.t('legacyModel') }}</label>
+              <input v-model="legacyModel" :placeholder="i18n.t('placeholderModel')" />
             </div>
             <div class="actions">
-              <button class="btn-sm" @click="testLegacy">测试连接</button>
-              <button class="btn-sm btn-primary" @click="saveLegacySettings">保存</button>
+              <button class="btn-sm" @click="testLegacy">{{ i18n.t('btnTestConn') }}</button>
+              <button class="btn-sm btn-primary" @click="saveLegacySettings">{{ i18n.t('save') }}</button>
             </div>
             <div v-if="legacyTestResult" class="test-result">{{ legacyTestResult }}</div>
           </div>
