@@ -56,17 +56,18 @@ function setLocale(l: string) {
           <span v-if="!collapsed" class="nav-label">{{ i18n.t('navHelp') }}</span>
         </router-link>
       </nav>
-      <div v-if="!collapsed" class="sidebar-footer">
+      <div class="sidebar-footer">
         <div class="footer-row">
           <button class="footer-btn" @click="theme.toggle()" :title="theme.isDark ? i18n.t('themeLight') : i18n.t('themeDark')">
             {{ theme.isDark ? '☀️' : '🌙' }}
           </button>
-          <div class="locale-wrap">
+          <div v-if="!collapsed" class="locale-wrap">
             <button class="footer-btn" @click="localeOpen = !localeOpen">🌐</button>
             <div v-if="localeOpen" class="locale-popup">
               <button v-for="l in locales" :key="l.value" :class="['locale-opt', { active: i18n.locale === l.value }]" @click="setLocale(l.value)">{{ l.label }}</button>
             </div>
           </div>
+          <button class="footer-btn collapse-btn" @click="collapsed = !collapsed" :title="collapsed ? 'Expand' : 'Collapse'">◀</button>
         </div>
       </div>
     </aside>
@@ -263,6 +264,9 @@ textarea {
   background: var(--primary);
   color: #fff;
 }
+.collapse-btn {
+  font-size: 14px;
+}
 .sidebar.collapsed {
   width: 68px;
   min-width: 68px;
@@ -284,6 +288,16 @@ textarea {
 .sidebar.collapsed .nav-icon {
   width: auto;
   font-size: 22px;
+}
+.sidebar.collapsed .sidebar-footer {
+  padding: 12px 4px;
+}
+.sidebar.collapsed .footer-row {
+  flex-direction: column;
+  align-items: center;
+}
+.sidebar.collapsed .collapse-btn {
+  font-size: 14px;
 }
 .main-content {
   flex: 1;
