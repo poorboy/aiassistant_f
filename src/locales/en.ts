@@ -1,13 +1,13 @@
 export default {
   // App
   appTitle: '🤖 AI Assistant',
-  navChat: '💬 Chat',
-  navMCP: '🔌 AI Bridge',
-  navPrompts: '📝 Roles',
-  navUserPrompts: '📋 Prompts',
-  navModelSettings: '🧠 Models',
-  navSettings: '⚙️ Settings',
-  navHelp: '❓ Help',
+  navChat: 'Chat',
+  navMCP: 'AI Bridge',
+  navPrompts: 'Roles',
+  navUserPrompts: 'Prompts',
+  navModelSettings: 'Models',
+  navSettings: 'Settings',
+  navHelp: 'Help',
   themeLight: '☀️ Light',
   themeDark: '🌙 Dark',
 
