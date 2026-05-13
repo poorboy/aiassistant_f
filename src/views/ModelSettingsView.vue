@@ -116,6 +116,8 @@ const presets = [
   { label: "混元", provider: "腾讯", name: "混元", model: "hunyuan", base_url: "https://api.hunyuan.cloud.tencent.com/v1" },
   { label: "ERNIE 4.5", provider: "百度", name: "ERNIE 4.5", model: "ernie-4.5", base_url: "https://aip.baidubce.com" },
   { label: "Claude (OpenRouter)", provider: "OpenRouter", name: "Claude Sonnet", model: "anthropic/claude-sonnet-4-20250514", base_url: "https://openrouter.ai/api/v1" },
+  { label: "Ollama (本地)", provider: "Ollama", name: "Ollama 本地", model: "llama3.2", base_url: "http://localhost:11434" },
+  { label: "Llama.cpp (本地)", provider: "Llama.cpp", name: "Llama.cpp 本地", model: "ggml-model-q4_k_m", base_url: "http://localhost:8080" },
 ]
 
 function fillPreset(p: typeof presets[number]) {
