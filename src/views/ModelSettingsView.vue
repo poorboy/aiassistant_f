@@ -97,26 +97,50 @@ const groupedConfigs = computed(() => {
   return groups;
 });
 
+const groupedPresets = computed(() => {
+  const map: Record<string, { label: string; items: typeof presets }> = {};
+  for (const p of presets) {
+    const g = p.provider;
+    if (!map[g]) map[g] = { label: g, items: [] };
+    map[g].items.push(p);
+  }
+  return Object.values(map);
+})
+
 const presets = [
   { label: "DeepSeek Chat", provider: "DeepSeek", name: "DeepSeek Chat", model: "deepseek-chat", base_url: "https://api.deepseek.com" },
   { label: "DeepSeek V3 (SiliconFlow)", provider: "SiliconFlow", name: "DeepSeek V3", model: "Pro/deepseek-ai/DeepSeek-V3", base_url: "https://api.siliconflow.cn/v1" },
+  { label: "DeepSeek R1 (SiliconFlow)", provider: "SiliconFlow", name: "DeepSeek R1", model: "Pro/deepseek-ai/DeepSeek-R1", base_url: "https://api.siliconflow.cn/v1" },
   { label: "GPT-4o", provider: "OpenAI", name: "GPT-4o", model: "gpt-4o", base_url: "https://api.openai.com" },
   { label: "GPT-4o Mini", provider: "OpenAI", name: "GPT-4o Mini", model: "gpt-4o-mini", base_url: "https://api.openai.com" },
+  { label: "o3", provider: "OpenAI", name: "o3", model: "o3", base_url: "https://api.openai.com" },
   { label: "Claude Sonnet", provider: "Anthropic", name: "Claude Sonnet", model: "claude-sonnet-4-20250514", base_url: "https://api.anthropic.com" },
   { label: "Claude Haiku", provider: "Anthropic", name: "Claude Haiku", model: "claude-haiku-3-5-20250101", base_url: "https://api.anthropic.com" },
   { label: "Gemini 2.5 Pro", provider: "Google", name: "Gemini 2.5 Pro", model: "gemini-2.5-pro", base_url: "https://generativelanguage.googleapis.com" },
   { label: "Gemini 2.5 Flash", provider: "Google", name: "Gemini 2.5 Flash", model: "gemini-2.5-flash", base_url: "https://generativelanguage.googleapis.com" },
   { label: "Moonshot v1", provider: "Moonshot", name: "Moonshot v1", model: "moonshot-v1-8k", base_url: "https://api.moonshot.cn" },
+  { label: "Moonshot v128k", provider: "Moonshot", name: "Moonshot v1 128k", model: "moonshot-v1-128k", base_url: "https://api.moonshot.cn" },
   { label: "GLM-4-Plus", provider: "智谱", name: "GLM-4-Plus", model: "glm-4-plus", base_url: "https://open.bigmodel.cn/api/paas/v4" },
+  { label: "GLM-4-Air", provider: "智谱", name: "GLM-4-Air", model: "glm-4-air", base_url: "https://open.bigmodel.cn/api/paas/v4" },
   { label: "Qwen Max", provider: "阿里云", name: "Qwen Max", model: "qwen-max", base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1" },
   { label: "Qwen Turbo", provider: "阿里云", name: "Qwen Turbo", model: "qwen-turbo", base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1" },
+  { label: "Qwen Plus", provider: "阿里云", name: "Qwen Plus", model: "qwen-plus", base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1" },
   { label: "Llama 3.3 (Groq)", provider: "Groq", name: "Llama 3.3 70B", model: "llama-3.3-70b-versatile", base_url: "https://api.groq.com/openai/v1" },
+  { label: "Mixtral (Groq)", provider: "Groq", name: "Mixtral 8x7B", model: "mixtral-8x7b-32768", base_url: "https://api.groq.com/openai/v1" },
+  { label: "Gemma2 (Groq)", provider: "Groq", name: "Gemma 2 9B", model: "gemma2-9b-it", base_url: "https://api.groq.com/openai/v1" },
   { label: "Llama 3.3 (Together)", provider: "Together AI", name: "Llama 3.3 70B", model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", base_url: "https://api.together.xyz/v1" },
+  { label: "DeepSeek (Together)", provider: "Together AI", name: "DeepSeek V3", model: "deepseek-ai/DeepSeek-V3", base_url: "https://api.together.xyz/v1" },
   { label: "Grok Beta", provider: "xAI", name: "Grok Beta", model: "grok-beta", base_url: "https://api.x.ai/v1" },
+  { label: "Grok 2", provider: "xAI", name: "Grok 2", model: "grok-2-1212", base_url: "https://api.x.ai/v1" },
   { label: "混元", provider: "腾讯", name: "混元", model: "hunyuan", base_url: "https://api.hunyuan.cloud.tencent.com/v1" },
   { label: "ERNIE 4.5", provider: "百度", name: "ERNIE 4.5", model: "ernie-4.5", base_url: "https://aip.baidubce.com" },
+  { label: "ERNIE 3.5", provider: "百度", name: "ERNIE 3.5", model: "ernie-3.5-8k", base_url: "https://aip.baidubce.com" },
   { label: "Claude (OpenRouter)", provider: "OpenRouter", name: "Claude Sonnet", model: "anthropic/claude-sonnet-4-20250514", base_url: "https://openrouter.ai/api/v1" },
+  { label: "GPT-4o (OpenRouter)", provider: "OpenRouter", name: "GPT-4o", model: "openai/gpt-4o", base_url: "https://openrouter.ai/api/v1" },
+  { label: "DeepSeek (OpenRouter)", provider: "OpenRouter", name: "DeepSeek V3", model: "deepseek/deepseek-chat", base_url: "https://openrouter.ai/api/v1" },
   { label: "Ollama (本地)", provider: "Ollama", name: "Ollama 本地", model: "llama3.2", base_url: "http://localhost:11434" },
+  { label: "Ollama Qwen2.5", provider: "Ollama", name: "Ollama Qwen2.5", model: "qwen2.5", base_url: "http://localhost:11434" },
+  { label: "Ollama DeepSeek", provider: "Ollama", name: "Ollama DeepSeek", model: "deepseek-r1", base_url: "http://localhost:11434" },
   { label: "Llama.cpp (本地)", provider: "Llama.cpp", name: "Llama.cpp 本地", model: "ggml-model-q4_k_m", base_url: "http://localhost:8080" },
 ]
 
@@ -142,7 +166,10 @@ function fillPreset(p: typeof presets[number]) {
         <div v-if="showForm" class="form-card">
           <div class="preset-row">
             <span class="preset-label">{{ i18n.t('presetLabel') }}</span>
-            <button v-for="p in presets" :key="p.label" class="preset-btn" @click="fillPreset(p)">{{ p.label }}</button>
+            <div v-for="(group, gIdx) in groupedPresets" :key="gIdx" class="preset-group">
+            <span class="preset-group-label">{{ group.label }}</span>
+            <button v-for="p in group.items" :key="p.label" class="preset-btn" @click="fillPreset(p)">{{ p.label }}</button>
+          </div>
           </div>
           <div class="form-row">
             <div class="field">
@@ -390,6 +417,19 @@ header { margin-bottom: 16px; }
   color: var(--text-secondary, #666);
   white-space: nowrap;
   margin-right: 4px;
+}
+.preset-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+.preset-group-label {
+  font-size: 10px;
+  color: var(--text-secondary, #999);
+  min-width: 60px;
+  font-weight: 600;
 }
 .preset-btn {
   font-size: 11px;
